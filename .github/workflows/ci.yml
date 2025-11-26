@@ -19,13 +19,6 @@ jobs:
         with:
           node-version: "18"
 
-      - name: Cache npm
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: ${{ runner.os }}-node-
-
       - name: Install dependencies
         run: npm ci
 
@@ -36,23 +29,28 @@ jobs:
         run: mkdir -p test-results
 
       - name: Run Playwright tests (CI)
-        # Use correct reporter syntax: no quoted space; or use config file reporters
-        run: npx playwright test --reporter=list --reporter=junit || true
+        # use two --reporter flags to avoid shell quoting issues
+        run: npx playwright test --reporter=list --reporter=junit
         env:
           CI: true
 
-      - name: Debug - show files created by tests
+      - name: Debug - show files created by tests (important)
         if: always()
         run: |
-          echo "PWD: $(pwd)"
-          echo "Root listing:"
+          echo "=== Current working directory ==="
+          pwd
+          echo "=== Top-level listing ==="
           ls -la
-          echo "test-results listing:"
+          echo "=== Find any XML or HTML report files ==="
+          find . -maxdepth 4 -type f \( -iname "*.xml" -o -iname "*.html" -o -iname "results.xml" \) -print -exec ls -la {} \;
+          echo "=== test-results content (if any) ==="
           ls -la test-results || true
-          echo "playwright-report listing:"
+          echo "=== playwright-report content (if any) ==="
           ls -la playwright-report || true
+          echo "=== cat any results.xml for quick inspection (if present) ==="
+          if [ -f test-results/results.xml ]; then echo '---- results.xml ----'; cat test-results/results.xml; fi
 
-      - name: Upload JUnit & report artifacts
+      - name: Upload Playwright artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
