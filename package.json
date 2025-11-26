@@ -1,0 +1,13 @@
+{
+  "name": "playwright-ci-sample",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:ci": "playwright test --reporter=list,junit",
+    "install-browsers": "npx playwright install --with-deps"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}
